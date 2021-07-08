@@ -1,0 +1,33 @@
+{
+    "name": "@eeue56/mainc",
+    "version": "0.0.1",
+    "description": "",
+    "main": "src/mainc.ts",
+    "devDependencies": {
+        "prettier": "github:eeue56/prettier#feat/spacing-around-square-brackets",
+        "typescript": "^4.3.5"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc -p tsconfig.json",
+        "format": "npx prettier --write ."
+    },
+    "bin": "build/mainc.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eeue56/mainc.git"
+    },
+    "keywords": [
+        "typescript",
+        "hiraeth"
+    ],
+    "author": "eeue56",
+    "license": "BSD-3-Clause",
+    "bugs": {
+        "url": "https://github.com/eeue56/mainc/issues"
+    },
+    "homepage": "https://github.com/eeue56/mainc#readme",
+    "dependencies": {
+        "@eeue56/baner": "^0.0.1"
+    }
+}
