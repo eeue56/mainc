@@ -17,23 +17,6 @@ import {
     variableList,
 } from "@eeue56/baner";
 
-async function getFiles(dir: string): Promise<string[]> {
-    const dirents: fs.Dirent[] = await fsPromises.readdir(dir, {
-        withFileTypes: true,
-    });
-    const files = await Promise.all(
-        dirents.map(async (dirent: fs.Dirent) => {
-            const res: string = path.resolve(dir, dirent.name);
-            if (dirent.isDirectory()) {
-                return await getFiles(res);
-            } else {
-                return res;
-            }
-        })
-    );
-    return Array.prototype.concat(...files);
-}
-
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 function isAsyncFunction(func: any): boolean {
