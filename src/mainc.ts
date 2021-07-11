@@ -11,8 +11,10 @@ import {
     empty,
     help,
     longFlag,
+    number,
     parse,
     parser,
+    shortFlag,
     string,
     variableList,
 } from "@eeue56/baner";
@@ -23,10 +25,14 @@ function isAsyncFunction(func: any): boolean {
     return Object.getPrototypeOf(func).constructor === AsyncFunction;
 }
 
+type OutputFormat = "console" | "json";
+
 export async function runner(): Promise<any> {
     const cliParser = parser([
         longFlag("function", "Run a specific function", variableList(string())),
         longFlag("file", "Run a specific file", variableList(string())),
+        shortFlag("n", "Number of times to run each benchmark", number()),
+        longFlag("json", "Output results as json", empty()),
         bothFlag("h", "help", "Displays help message", empty()),
     ]);
 
@@ -47,10 +53,23 @@ export async function runner(): Promise<any> {
             ? (program.flags.file.arguments.value as string[])
             : null;
 
-    console.log("Looking for tsconfig...");
+    const timesToRun =
+        program.flags.n.arguments.kind === "ok"
+            ? (program.flags.n.arguments.value as number)
+            : 3;
+
+    const outputFormat: OutputFormat = program.flags.json.isPresent
+        ? "json"
+        : "console";
+
+    if (outputFormat === "console") {
+        console.log("Looking for tsconfig...");
+    }
     const strConfig = (await fsPromises.readFile("./tsconfig.json")).toString();
     const config = JSON5.parse(strConfig);
-    console.log(`Looking for benchmarks in ${config.include}...`);
+    if (outputFormat === "console") {
+        console.log(`Looking for benchmarks in ${config.include}...`);
+    }
 
     const files = fileNamesToRun
         ? fileNamesToRun
@@ -58,9 +77,12 @@ export async function runner(): Promise<any> {
 
     let totalBenchmarks = 0;
 
-    await Promise.all(
+    const results = await Promise.all(
         files.map(async (fileName) => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise<{
+                fileName: string;
+                fileScores: Record<string, number>;
+            } | null>(async (resolve, reject) => {
                 fileName =
                     program.flags.file.arguments.kind === "ok"
                         ? path.join(process.cwd(), fileName)
@@ -71,7 +93,11 @@ export async function runner(): Promise<any> {
                     return resolve(null);
                 }
 
-                console.log(`Found ${fileName}`);
+                if (outputFormat === "console") {
+                    console.log(`Found ${fileName}`);
+                }
+                const fileScores: Record<string, number> = {};
+
                 const imported = await import(fileName);
                 for (const functionName of Object.keys(imported)) {
                     if (!functionName.startsWith("bench")) continue;
@@ -85,7 +111,10 @@ export async function runner(): Promise<any> {
                     const isAsync = isAsyncFunction(func);
 
                     totalBenchmarks += 1;
-                    console.log(`Running ${functionName}`);
+
+                    if (outputFormat === "console") {
+                        console.log(`Running ${functionName}`);
+                    }
 
                     // warm up the cache
                     for (var i = 0; i < 3; i++) {
@@ -98,7 +127,7 @@ export async function runner(): Promise<any> {
 
                     const latencies = [ ];
 
-                    for (var i = 0; i < 3; i++) {
+                    for (var i = 0; i < timesToRun; i++) {
                         let startTime = null;
                         let endTime = null;
                         if (isAsync) {
@@ -121,15 +150,27 @@ export async function runner(): Promise<any> {
                         (prev, current) => prev + current
                     );
 
-                    console.log(`Took ${sum / 3}ms on average`);
+                    if (outputFormat === "console") {
+                        console.log(`Took ${sum / timesToRun}ms on average`);
+                    }
+
+                    fileScores[functionName] = sum / timesToRun;
                 }
 
-                resolve(null);
+                return resolve({
+                    fileName,
+                    fileScores,
+                });
             });
         })
     );
 
-    console.log(`Ran ${totalBenchmarks} benchmarks.`);
+    if (outputFormat === "console") {
+        console.log(`Ran ${totalBenchmarks} benchmarks.`);
+    } else {
+        const filteredResults = results.filter((res) => res !== null);
+        console.log(JSON.stringify(filteredResults, null, 4));
+    }
 }
 
 if (require.main === module) {

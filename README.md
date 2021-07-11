@@ -25,7 +25,9 @@ You can also specify specific files or functions to run via flags:
 ```
   --function [string...]:		Run a specific function
   --file [string...]:		    Run a specific file
-  -h, --help :		            Displays help message
+  -n number:		            Number of times to run each benchmark
+  --json :		              Output results as json
+  -h, --help :		          Displays help message
 
 ```
 
