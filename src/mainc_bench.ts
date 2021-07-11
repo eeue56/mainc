@@ -12,7 +12,7 @@ export function benchSlowTest() {
     }
 }
 
-export function benchReallSlowTest() {
+export function benchReallySlowTest() {
     let a = 0;
 
     for (var i = 0; i < 100000000; i++) {
@@ -35,7 +35,7 @@ export async function benchAsyncSlowTest() {
     });
 }
 
-export async function benchAsyncReallSlowTest() {
+export async function benchAsyncReallySlowTest() {
     return new Promise((resolve) => {
         setTimeout(() => {
             const a = 1;
