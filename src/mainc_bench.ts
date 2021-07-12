@@ -20,6 +20,10 @@ export function benchReallySlowTest() {
     }
 }
 
+export function compareNonAsyncTests() {
+    return [ benchQuickTest, benchSlowTest, benchReallySlowTest ];
+}
+
 export async function benchAsyncQuickTest() {
     const a = 1;
     const b = 2;
@@ -42,4 +46,12 @@ export async function benchAsyncReallySlowTest() {
             resolve(null);
         }, 3000);
     });
+}
+
+export function compareAsyncTests() {
+    return [
+        benchAsyncQuickTest,
+        benchAsyncSlowTest,
+        benchAsyncReallySlowTest,
+    ];
 }
