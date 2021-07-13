@@ -1,6 +1,6 @@
 {
     "name": "@eeue56/mainc",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "",
     "main": "src/mainc.ts",
     "devDependencies": {
