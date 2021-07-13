@@ -161,6 +161,7 @@ export async function runner(): Promise<any> {
 
                         const compareFunc = imported[functionName];
 
+                        console.log(`Running ${functionName}`);
                         const innerFunctions = compareFunc();
                         const sums: Record<string, number> = {};
 
