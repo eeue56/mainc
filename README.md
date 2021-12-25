@@ -23,12 +23,13 @@ See [mainc_bench.ts](src/mainc_bench.ts) for example usage.
 You can also specify specific files or functions to run via flags:
 
 ```
-  --function [string...]:		Run a specific function
-  --file [string...]:		    Run a specific file
-  -n number:		            Number of times to run each benchmark
-  --json :		              Output results as json
-  --compare :		            Run comparisons
-  -h, --help :		          Displays help message
+  --function [string...]:   Run a specific function
+  --file [string...]:       Run a specific file
+  -n number:                Number of times to run each benchmark
+  --json :                  Output results as json
+  --compare :               Run comparisons
+  --fixed number :          Number of decimal places to go to. Defaults to 3
+  -h, --help :              Displays help message
 
 ```
 

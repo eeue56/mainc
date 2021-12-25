@@ -1,11 +1,4 @@
 #!/usr/bin/env ts-node
-import * as path from "path";
-
-import * as fs from "fs";
-import { promises as fsPromises } from "fs";
-
-import glob from "fast-glob";
-import JSON5 from "json5";
 import {
     bothFlag,
     empty,
@@ -18,6 +11,10 @@ import {
     string,
     variableList,
 } from "@eeue56/baner";
+import glob from "fast-glob";
+import { promises as fsPromises } from "fs";
+import JSON5 from "json5";
+import * as path from "path";
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
@@ -77,6 +74,11 @@ export async function runner(): Promise<any> {
         shortFlag("n", "Number of times to run each benchmark", number()),
         longFlag("json", "Output results as json", empty()),
         longFlag("compare", "Run comparisons", empty()),
+        longFlag(
+            "fixed",
+            "Number of decimal places to go to. Defaults to 3",
+            number()
+        ),
         bothFlag("h", "help", "Displays help message", empty()),
     ]);
 
@@ -100,6 +102,11 @@ export async function runner(): Promise<any> {
     const timesToRun =
         program.flags.n.arguments.kind === "ok"
             ? (program.flags.n.arguments.value as number)
+            : 3;
+
+    const fixedPoints =
+        program.flags.fixed.arguments.kind === "ok"
+            ? (program.flags.fixed.arguments.value as number)
             : 3;
 
     const outputFormat: OutputFormat = program.flags.json.isPresent
@@ -133,6 +140,7 @@ export async function runner(): Promise<any> {
             return new Promise<{
                 fileName: string;
                 fileScores: Record<string, number>;
+                totalTime: number;
             } | null>(async (resolve, reject) => {
                 fileName =
                     program.flags.file.arguments.kind === "ok"
@@ -188,8 +196,14 @@ export async function runner(): Promise<any> {
                                 namesSortedBySum.map(([ name, runtime ]) => {
                                     return {
                                         name,
-                                        runtime,
-                                        timesSlower: runtime / baseSpeed,
+                                        runtime: parseFloat(
+                                            runtime.toFixed(fixedPoints)
+                                        ),
+                                        timesSlower: parseFloat(
+                                            (runtime / baseSpeed).toFixed(
+                                                fixedPoints
+                                            )
+                                        ),
                                     };
                                 })
                             );
@@ -199,6 +213,9 @@ export async function runner(): Promise<any> {
                     return resolve(null);
                 } else {
                     const fileScores: Record<string, number> = {};
+                    let startTime = null;
+                    let endTime = null;
+                    startTime = process.hrtime();
 
                     for (const functionName of Object.keys(imported)) {
                         if (!functionName.startsWith("bench")) continue;
@@ -220,16 +237,31 @@ export async function runner(): Promise<any> {
 
                         if (outputFormat === "console") {
                             console.log(
-                                `Took ${sum / timesToRun}ms on average`
+                                `Took ${(sum / timesToRun).toFixed(
+                                    fixedPoints
+                                )}ms on average`
                             );
                         }
 
                         fileScores[functionName] = sum / timesToRun;
                     }
 
+                    endTime = process.hrtime(startTime);
+                    const latency = parseFloat(
+                        (
+                            (endTime[0] * 1000000000 + endTime[1]) /
+                            1000000
+                        ).toFixed(fixedPoints)
+                    );
+
+                    if (outputFormat === "console") {
+                        console.log(`Ran ${fileName} in ${latency}ms`);
+                    }
+
                     return resolve({
                         fileName,
                         fileScores,
+                        totalTime: latency,
                     });
                 }
             });
